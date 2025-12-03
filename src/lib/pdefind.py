@@ -222,7 +222,7 @@ class PDEFinder:
                                     n_alphas=n_alphas,
                                     alphas=alphas,
                                     fit_intercept=False,
-                                    normalize=False,
+                                    #normalize=False,
                                     precompute='auto',
                                     max_iter=max_iter,
                                     tol=0.000001,
@@ -235,7 +235,7 @@ class PDEFinder:
                                     selection='random')
         else:
             self.lasso_cv = LinearRegression(fit_intercept=False,
-                                             normalize=False,
+                                             #normalize=False,
                                              n_jobs=-1,
                                              copy_X=True)
         # TODO: add variable to decide the fitting algorithm (MultiTaskLassoCV, ElasticNetCV, LassoCV or linear)

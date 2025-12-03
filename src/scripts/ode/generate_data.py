@@ -35,7 +35,90 @@ def generate_data(data_experiment_name,
             ode_solution.to_csv(path_or_buf='{}/{}.csv'.format(folder_path, filename), index=False)
     pd.DataFrame(data_params, columns=['filename'] + model_param_names).to_csv('{}/eq_params.csv'.format(folder_path),
                                                                                index=False)
+                                                                               
     return folder_path
+
+def generate_data_with_noise(
+    data_experiment_name,
+    num_experiments_per_param: int, 
+    num_time_steps: int, 
+    dt: float,
+    model_class: DifferentialModels = Oscilator,
+    list_model_params: list = [{'a': 1, 'b': -0.1, 'c': 0.2, 'd': 2}],
+    noise_std: float = 0.0,
+    noise_type: str = "constant",
+    seed: int = 10
+):
+    """
+    Generates ODE trajectories with optional additive Gaussian noise.
+    
+    Args:
+        noise_std (float): Standard deviation of the Gaussian noise to add. 
+                           0.0 means clean data.
+    """
+    # Create specific folder for this noise level to keep experiments organized
+    folder_name = f"{data_experiment_name}_noise_{noise_std}"
+    folder_path = Path.joinpath(data_path, folder_name)
+    folder_path.mkdir(exist_ok=True, parents=True)
+    
+    data_params = []
+    model_param_names = list(list_model_params[0].keys())
+    
+    np.random.seed(seed)
+    
+    generated_files = []
+
+    for j, model_params in enumerate(list_model_params):
+        for i in range(num_experiments_per_param):
+            # 1. Simulate true dynamics
+            model = model_class(**model_params)
+            integrator = Integrator(model)
+            Xinit = np.random.normal(size=len(model.var_names))
+            
+            # Clean solution
+            ode_solution = integrator.integrate_solver(
+                Xinit=Xinit,
+                time_steps=num_time_steps,
+                integration_dt=dt
+            )
+            
+            # 2. Add Gaussian Noise (Measurement Noise)
+            if noise_std > 0 and noise_type == "constant":
+                noise = np.random.normal(
+                    loc=0.0, 
+                    scale=noise_std, 
+                    size=ode_solution.shape
+                )
+                # We add noise only to the variable columns, not the index (time)
+                ode_solution.iloc[:, :] += noise
+
+            elif noise_std > 0 and noise_type == "SNR": 
+                signal_std = ode_solution.std(axis=0)
+                noise = np.random.normal(
+                    loc=0.0,
+                    scale=noise_std*signal_std,
+                    size=ode_solution.shape
+                )
+
+                ode_solution.iloc[:, :] += noise
+
+            # 3. Save Data
+            ode_solution.index.name = 'time'
+            ode_solution.reset_index(inplace=True)
+            
+            filename = 'solution_params_{}_init_cond_{}'.format(j, i)
+            data_params.append([filename] + [model_params[k] for k in model_param_names])
+            
+            save_path = '{}/{}.csv'.format(folder_path, filename)
+            ode_solution.to_csv(path_or_buf=save_path, index=False)
+            generated_files.append(save_path)
+
+    # Save parameters metadata
+    pd.DataFrame(data_params, columns=['filename'] + model_param_names)\
+        .to_csv('{}/eq_params.csv'.format(folder_path), index=False)
+    
+    print(f"Generated {len(generated_files)} files in: {folder_path}")
+    return str(folder_path)
 
 
 def regOrd(nVar: int, dMax: int) -> pd.DataFrame:

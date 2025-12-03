@@ -563,12 +563,27 @@ class Field:
         if domain is None:
             domain = self.domain
 
-        df = pd.DataFrame()
+        # df = pd.DataFrame()
+        # for var in copy.deepcopy(self.data):
+        #     var.add_axis(domain)
+        #     var.reorder_axis(domain)
+        #     df = df.append(pd.Series(var.data.ravel(), name=var.get_full_name()))
+        # return df.T
+
+        data_list = []
         for var in copy.deepcopy(self.data):
             var.add_axis(domain)
             var.reorder_axis(domain)
-            df = df.append(pd.Series(var.data.ravel(), name=var.get_full_name()))
-        return df.T
+            # Collect series in the list
+            data_list.append(pd.Series(var.data.ravel(), name=var.get_full_name()))
+
+        # Concatenate all series at once (axis=1 makes them columns automatically)
+        if data_list:
+            df = pd.concat(data_list, axis=1)
+        else:
+            df = pd.DataFrame()
+
+        return df
 
     def get_subset_from_index_limits(self, domain_index_sub_range_dict):
         return Field([var.get_subset_from_index_limits(domain_index_sub_range_dict) for var in self.data])
