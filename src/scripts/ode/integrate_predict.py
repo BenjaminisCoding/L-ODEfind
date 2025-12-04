@@ -72,10 +72,11 @@ def translate_coeff_gpomo2odefind(df: pd.DataFrame, var_names, n_vars, d_max):
 
 
 def integrate_predict_smape(original_data: str, results_folder: str, time_horizons, testsize=200,
-                            one=False, verbose=False) -> pd.DataFrame:
+                            one=False, verbose=False, noise_level = 0.0) -> pd.DataFrame:
+    
     path_data = Path.joinpath(data_path, original_data)
     path_results = Path.joinpath(results_path, results_folder)
-
+    # path_results = Path.joinpath(results_path,results_folder, f'noise={noise_level}')
     smapes = []
     for f in listdir(str(path_results)):
         if 'solution' == f[:len('solution')]:

@@ -10,9 +10,14 @@ from src.lib.skodefind import SkODEFind
 
 
 def fit_and_save_coeffs(model: str, out: str, targets: List[int], maxpolys: List[int], obs_vars: List[str],
-                        testsize=200):
+                        testsize=200, noise_level=0.0, noise_type = "SNR"):
+
     path_data = Path.joinpath(data_path, model)
+    # folder_name = f"{model}_noise_{noise_level}"
+    # path_data = Path.joinpath(data_path, folder_name)
     path_results = Path.joinpath(results_path, out + '_' + '_'.join(obs_vars) + '_Odefind')
+    Path(path_results).mkdir(parents=True, exist_ok=True)
+    path_results = Path.joinpath(path_results, f'noise={noise_level}')
     Path(path_results).mkdir(parents=True, exist_ok=True)
 
     times = []

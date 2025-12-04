@@ -38,26 +38,28 @@ def generate_data(data_experiment_name,
                                                                                
     return folder_path
 
+
+
 def generate_data_with_noise(
     data_experiment_name,
     num_experiments_per_param: int, 
     num_time_steps: int, 
     dt: float,
     model_class: DifferentialModels = Oscilator,
-    list_model_params: list = [{'a': 1, 'b': -0.1, 'c': 0.2, 'd': 2}],
-    noise_std: float = 0.0,
+    # list_model_params: list = [{'a': 1, 'b': -0.1, 'c': 0.2, 'd': 2}],
+    list_model_params: list = [{'a': 0.1, 'b': -1, 'c': 1, 'd': 0}],
+    noise_level: float = 0.0,
     noise_type: str = "constant",
     seed: int = 10
 ):
     """
-    Generates ODE trajectories with optional additive Gaussian noise.
-    
+    Generates ODE trajectories with optional additive Gaussian noise.    
     Args:
         noise_std (float): Standard deviation of the Gaussian noise to add. 
                            0.0 means clean data.
     """
     # Create specific folder for this noise level to keep experiments organized
-    folder_name = f"{data_experiment_name}_noise_{noise_std}"
+    folder_name = f"{data_experiment_name}_noise_{noise_level}"
     folder_path = Path.joinpath(data_path, folder_name)
     folder_path.mkdir(exist_ok=True, parents=True)
     
@@ -83,20 +85,20 @@ def generate_data_with_noise(
             )
             
             # 2. Add Gaussian Noise (Measurement Noise)
-            if noise_std > 0 and noise_type == "constant":
+            if noise_level > 0 and noise_type == "constant":
                 noise = np.random.normal(
                     loc=0.0, 
-                    scale=noise_std, 
+                    scale=noise_level, 
                     size=ode_solution.shape
                 )
                 # We add noise only to the variable columns, not the index (time)
                 ode_solution.iloc[:, :] += noise
 
-            elif noise_std > 0 and noise_type == "SNR": 
+            elif noise_level> 0 and noise_type == "SNR": 
                 signal_std = ode_solution.std(axis=0)
                 noise = np.random.normal(
                     loc=0.0,
-                    scale=noise_std*signal_std,
+                    scale=noise_level *signal_std,
                     size=ode_solution.shape
                 )
 

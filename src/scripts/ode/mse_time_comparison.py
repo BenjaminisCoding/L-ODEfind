@@ -8,7 +8,7 @@ from src.scripts.config import data_path, results_path
 from src.lib.simulation_manager import LorenzAttractor
 from os import listdir
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def xyz(nvar: int) -> List[str]:
     v = ['x', 'y', 'z']
@@ -148,6 +148,7 @@ def compare_coeffs(original_data: str, results_folder: str, var_name: str, d: in
     model_params = pd.read_csv(Path.joinpath(path_data, 'eq_params.csv'))
 
     mses = []
+    l1s = []
     all_adj_coeffs = []
     ix_coeff = True
 
@@ -196,8 +197,13 @@ def compare_coeffs(original_data: str, results_folder: str, var_name: str, d: in
                 all_adj_coeffs.append(c)
 
             mse = ((true_coeff - adj_coeffs) ** 2).mean().mean()
-            mses.append([model_name, f, mse])
-    df = pd.DataFrame(mses, columns=['method', 'model', 'mse'])
+            l1 = float(np.abs((true_coeff - adj_coeffs)).mean())
+            # mses.append([model_name, f, mse])
+            mses.append([model_name, f, mse, l1])
+
+
+    # df = pd.DataFrame(mses, columns=['method', 'model', 'mse'])
+    df = pd.DataFrame(mses, columns=['method', 'model', 'mse', 'l1'])
 
     if not fully_obs:
         all_coeffs = pd.concat(all_adj_coeffs, axis=1)
